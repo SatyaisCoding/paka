@@ -124,6 +124,120 @@ exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
   password: 'password',
+  displayName: 'displayName',
+  imageUrl: 'imageUrl',
+  timezone: 'timezone',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SourceScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  provider: 'provider',
+  providerId: 'providerId',
+  displayName: 'displayName',
+  config: 'config',
+  encryptedToken: 'encryptedToken',
+  connectedAt: 'connectedAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.DocumentScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  sourceId: 'sourceId',
+  title: 'title',
+  docType: 'docType',
+  s3Path: 's3Path',
+  size: 'size',
+  language: 'language',
+  hash: 'hash',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ChunkScalarFieldEnum = {
+  id: 'id',
+  documentId: 'documentId',
+  userId: 'userId',
+  text: 'text',
+  chunkHash: 'chunkHash',
+  startPos: 'startPos',
+  endPos: 'endPos',
+  tokenCount: 'tokenCount',
+  embeddingId: 'embeddingId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.EmbeddingScalarFieldEnum = {
+  id: 'id',
+  chunkId: 'chunkId',
+  model: 'model',
+  vectorRef: 'vectorRef',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.TaskScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  description: 'description',
+  dueAt: 'dueAt',
+  completed: 'completed',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ReminderScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  text: 'text',
+  remindAt: 'remindAt',
+  sent: 'sent',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.QueryLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  query: 'query',
+  response: 'response',
+  usedChunks: 'usedChunks',
+  latencyMs: 'latencyMs',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.OAuthTokenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  sourceId: 'sourceId',
+  provider: 'provider',
+  refreshToken: 'refreshToken',
+  accessToken: 'accessToken',
+  scope: 'scope',
+  expiry: 'expiry',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.FileUploadScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  filename: 'filename',
+  s3Path: 's3Path',
+  size: 'size',
+  mimeType: 'mimeType',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.AuditLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  action: 'action',
+  details: 'details',
+  ip: 'ip',
   createdAt: 'createdAt'
 };
 
@@ -132,14 +246,40 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
 exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
+
 
 exports.Prisma.ModelName = {
-  User: 'User'
+  User: 'User',
+  Source: 'Source',
+  Document: 'Document',
+  Chunk: 'Chunk',
+  Embedding: 'Embedding',
+  Task: 'Task',
+  Reminder: 'Reminder',
+  QueryLog: 'QueryLog',
+  OAuthToken: 'OAuthToken',
+  FileUpload: 'FileUpload',
+  AuditLog: 'AuditLog'
 };
 
 /**

@@ -96,6 +96,120 @@ exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
   password: 'password',
+  displayName: 'displayName',
+  imageUrl: 'imageUrl',
+  timezone: 'timezone',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SourceScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  provider: 'provider',
+  providerId: 'providerId',
+  displayName: 'displayName',
+  config: 'config',
+  encryptedToken: 'encryptedToken',
+  connectedAt: 'connectedAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.DocumentScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  sourceId: 'sourceId',
+  title: 'title',
+  docType: 'docType',
+  s3Path: 's3Path',
+  size: 'size',
+  language: 'language',
+  hash: 'hash',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ChunkScalarFieldEnum = {
+  id: 'id',
+  documentId: 'documentId',
+  userId: 'userId',
+  text: 'text',
+  chunkHash: 'chunkHash',
+  startPos: 'startPos',
+  endPos: 'endPos',
+  tokenCount: 'tokenCount',
+  embeddingId: 'embeddingId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.EmbeddingScalarFieldEnum = {
+  id: 'id',
+  chunkId: 'chunkId',
+  model: 'model',
+  vectorRef: 'vectorRef',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.TaskScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  description: 'description',
+  dueAt: 'dueAt',
+  completed: 'completed',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ReminderScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  text: 'text',
+  remindAt: 'remindAt',
+  sent: 'sent',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.QueryLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  query: 'query',
+  response: 'response',
+  usedChunks: 'usedChunks',
+  latencyMs: 'latencyMs',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.OAuthTokenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  sourceId: 'sourceId',
+  provider: 'provider',
+  refreshToken: 'refreshToken',
+  accessToken: 'accessToken',
+  scope: 'scope',
+  expiry: 'expiry',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.FileUploadScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  filename: 'filename',
+  s3Path: 's3Path',
+  size: 'size',
+  mimeType: 'mimeType',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.AuditLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  action: 'action',
+  details: 'details',
+  ip: 'ip',
   createdAt: 'createdAt'
 };
 
@@ -104,14 +218,40 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
 exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
+
 
 exports.Prisma.ModelName = {
-  User: 'User'
+  User: 'User',
+  Source: 'Source',
+  Document: 'Document',
+  Chunk: 'Chunk',
+  Embedding: 'Embedding',
+  Task: 'Task',
+  Reminder: 'Reminder',
+  QueryLog: 'QueryLog',
+  OAuthToken: 'OAuthToken',
+  FileUpload: 'FileUpload',
+  AuditLog: 'AuditLog'
 };
 /**
  * Create the Client
@@ -121,10 +261,10 @@ const config = {
   "clientVersion": "7.1.0",
   "engineVersion": "ab635e6b9d606fa5c8fb8b1a7f909c3c3c1c98ba",
   "activeProvider": "postgresql",
-  "inlineSchema": "datasource db {\n  provider = \"postgresql\"\n}\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/lib/generated/prisma\"\n}\n\nmodel User {\n  id        Int      @id @default(autoincrement())\n  email     String   @unique\n  password  String\n  createdAt DateTime @default(now())\n}\n"
+  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/lib/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel User {\n  id          Int      @id @default(autoincrement())\n  email       String   @unique\n  password    String // Hashed password\n  displayName String?\n  imageUrl    String?\n  timezone    String? // e.g. \"Asia/Kolkata\"\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n\n  // relations\n  sources     Source[]\n  documents   Document[]\n  tasks       Task[]\n  reminders   Reminder[]\n  queries     QueryLog[]\n  oauthTokens OAuthToken[]\n  audits      AuditLog[]\n  fileUploads FileUpload[]\n\n  @@index([email])\n}\n\nmodel Source {\n  id             Int       @id @default(autoincrement())\n  userId         Int\n  provider       String // e.g. \"gmail\", \"drive\", \"notion\", \"upload\"\n  providerId     String? // remote account id / email\n  displayName    String?\n  config         Json? // provider-specific config (scopes, folder ids)\n  encryptedToken String? // encrypted refresh token / token blob\n  connectedAt    DateTime?\n  createdAt      DateTime  @default(now())\n\n  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)\n  documents   Document[]\n  oauthTokens OAuthToken[]\n\n  @@index([userId, provider])\n}\n\nmodel Document {\n  id        Int      @id @default(autoincrement())\n  userId    Int\n  sourceId  Int? // null for direct uploads\n  title     String\n  docType   String // \"pdf\", \"txt\", \"md\", \"email\"\n  s3Path    String // S3 / MinIO key\n  size      Int?\n  language  String? // guessed language\n  hash      String?  @unique\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  chunks Chunk[]\n\n  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)\n  source Source? @relation(fields: [sourceId], references: [id], onDelete: SetNull)\n\n  @@index([userId])\n  @@index([sourceId])\n  @@index([createdAt])\n}\n\nmodel Chunk {\n  id          Int      @id @default(autoincrement())\n  documentId  Int\n  userId      Int\n  text        String   @db.Text // possibly large\n  chunkHash   String   @unique\n  startPos    Int? // character index in document\n  endPos      Int?\n  tokenCount  Int?\n  embeddingId Int? // FK to Embedding.id\n  createdAt   DateTime @default(now())\n\n  document  Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)\n  embedding Embedding?\n\n  @@index([documentId])\n  @@index([userId])\n}\n\nmodel Embedding {\n  id        Int      @id @default(autoincrement())\n  chunkId   Int      @unique\n  model     String? // e.g. \"text-embedding-3-large\" / provider\n  vectorRef String? // pointer/id in Qdrant/Pinecone (e.g. \"collection:id\")\n  metadata  Json? // any associated metadata (score, extra)\n  createdAt DateTime @default(now())\n\n  chunk Chunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)\n\n  @@index([model])\n}\n\nmodel Task {\n  id          Int       @id @default(autoincrement())\n  userId      Int\n  title       String\n  description String?\n  dueAt       DateTime?\n  completed   Boolean   @default(false)\n  createdAt   DateTime  @default(now())\n  updatedAt   DateTime  @updatedAt\n\n  user User @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@index([userId, dueAt])\n}\n\nmodel Reminder {\n  id        Int      @id @default(autoincrement())\n  userId    Int\n  text      String\n  remindAt  DateTime\n  sent      Boolean  @default(false)\n  createdAt DateTime @default(now())\n\n  user User @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@index([userId, remindAt])\n}\n\nmodel QueryLog {\n  id         Int      @id @default(autoincrement())\n  userId     Int\n  query      String   @db.Text\n  response   String?  @db.Text\n  usedChunks String? // JSON list of chunk ids or metadata\n  latencyMs  Int?\n  createdAt  DateTime @default(now())\n\n  user User @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@index([userId, createdAt])\n}\n\nmodel OAuthToken {\n  id           Int       @id @default(autoincrement())\n  userId       Int\n  sourceId     Int?\n  provider     String // \"google\", \"microsoft\", etc\n  refreshToken String // encrypted\n  accessToken  String? // optionally store (encrypted)\n  scope        String?\n  expiry       DateTime?\n  createdAt    DateTime  @default(now())\n  updatedAt    DateTime  @updatedAt\n\n  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)\n  source Source? @relation(fields: [sourceId], references: [id], onDelete: SetNull)\n\n  @@index([userId, provider])\n}\n\nmodel FileUpload {\n  id        Int      @id @default(autoincrement())\n  userId    Int\n  filename  String\n  s3Path    String\n  size      Int?\n  mimeType  String?\n  createdAt DateTime @default(now())\n\n  user User @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@index([userId, createdAt])\n}\n\nmodel AuditLog {\n  id        Int      @id @default(autoincrement())\n  userId    Int?\n  action    String // e.g. \"upload\", \"delete\", \"sync_gmail\"\n  details   Json?\n  ip        String?\n  createdAt DateTime @default(now())\n\n  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)\n\n  @@index([userId, createdAt])\n}\n"
 }
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"displayName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"imageUrl\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"timezone\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"sources\",\"kind\":\"object\",\"type\":\"Source\",\"relationName\":\"SourceToUser\"},{\"name\":\"documents\",\"kind\":\"object\",\"type\":\"Document\",\"relationName\":\"DocumentToUser\"},{\"name\":\"tasks\",\"kind\":\"object\",\"type\":\"Task\",\"relationName\":\"TaskToUser\"},{\"name\":\"reminders\",\"kind\":\"object\",\"type\":\"Reminder\",\"relationName\":\"ReminderToUser\"},{\"name\":\"queries\",\"kind\":\"object\",\"type\":\"QueryLog\",\"relationName\":\"QueryLogToUser\"},{\"name\":\"oauthTokens\",\"kind\":\"object\",\"type\":\"OAuthToken\",\"relationName\":\"OAuthTokenToUser\"},{\"name\":\"audits\",\"kind\":\"object\",\"type\":\"AuditLog\",\"relationName\":\"AuditLogToUser\"},{\"name\":\"fileUploads\",\"kind\":\"object\",\"type\":\"FileUpload\",\"relationName\":\"FileUploadToUser\"}],\"dbName\":null},\"Source\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"provider\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"providerId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"displayName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"config\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"encryptedToken\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"connectedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"SourceToUser\"},{\"name\":\"documents\",\"kind\":\"object\",\"type\":\"Document\",\"relationName\":\"DocumentToSource\"},{\"name\":\"oauthTokens\",\"kind\":\"object\",\"type\":\"OAuthToken\",\"relationName\":\"OAuthTokenToSource\"}],\"dbName\":null},\"Document\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"sourceId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"docType\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"s3Path\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"size\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"language\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"hash\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"chunks\",\"kind\":\"object\",\"type\":\"Chunk\",\"relationName\":\"ChunkToDocument\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"DocumentToUser\"},{\"name\":\"source\",\"kind\":\"object\",\"type\":\"Source\",\"relationName\":\"DocumentToSource\"}],\"dbName\":null},\"Chunk\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"documentId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"text\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"chunkHash\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"startPos\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"endPos\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"tokenCount\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"embeddingId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"document\",\"kind\":\"object\",\"type\":\"Document\",\"relationName\":\"ChunkToDocument\"},{\"name\":\"embedding\",\"kind\":\"object\",\"type\":\"Embedding\",\"relationName\":\"ChunkToEmbedding\"}],\"dbName\":null},\"Embedding\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"chunkId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"model\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"vectorRef\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"metadata\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"chunk\",\"kind\":\"object\",\"type\":\"Chunk\",\"relationName\":\"ChunkToEmbedding\"}],\"dbName\":null},\"Task\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"dueAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"completed\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"TaskToUser\"}],\"dbName\":null},\"Reminder\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"text\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"remindAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"sent\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"ReminderToUser\"}],\"dbName\":null},\"QueryLog\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"query\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"response\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"usedChunks\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"latencyMs\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"QueryLogToUser\"}],\"dbName\":null},\"OAuthToken\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"sourceId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"provider\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"refreshToken\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"accessToken\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"scope\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"expiry\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"OAuthTokenToUser\"},{\"name\":\"source\",\"kind\":\"object\",\"type\":\"Source\",\"relationName\":\"OAuthTokenToSource\"}],\"dbName\":null},\"FileUpload\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"filename\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"s3Path\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"size\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"mimeType\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"FileUploadToUser\"}],\"dbName\":null},\"AuditLog\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"action\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"details\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"ip\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"AuditLogToUser\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.compilerWasm = {
   getRuntime: async () => require('./query_compiler_bg.js'),

@@ -6,11 +6,9 @@ dist/
 
 # Environment files
 .env
-.env.*
+.env.local
+.env.*.local
 !.env.example
-
-# Prisma generated
-src/lib/generated/
 
 # Logs
 *.log
@@ -29,3 +27,14 @@ Thumbs.db
 # Docker volumes
 postgres_data/
 
+# Uploaded files (user data)
+uploads/
+**/uploads/
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/
+
+# Test files
+test-*.html
