@@ -150,14 +150,23 @@ docker-compose up -d
 | DELETE | `/reminders/:id` | Delete reminder |
 | DELETE | `/reminders/bulk/sent` | Delete sent |
 
-### File Upload (`/upload`)
+### File Upload (`/upload`) - Auto-Parse PDFs, DOCX, TXT
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/upload` | Upload file |
+| GET | `/upload/supported-types` | List supported file types |
+| POST | `/upload` | Upload & auto-process file |
+| POST | `/upload/raw` | Upload without processing |
+| POST | `/upload/:id/parse` | Parse existing file |
+| GET | `/upload/:id/download` | Download file |
 | GET | `/upload` | List files |
 | GET | `/upload/stats` | Get stats |
 | GET | `/upload/:id` | Get file info |
 | DELETE | `/upload/:id` | Delete file |
+
+**Supported File Types:**
+- PDF (`.pdf`) - Extracts text from all pages
+- Word (`.docx`) - Extracts text content
+- Text (`.txt`, `.md`, `.csv`) - Direct text extraction
 
 ### Vectors (`/vectors`) - Semantic Search & RAG
 | Method | Endpoint | Description |
