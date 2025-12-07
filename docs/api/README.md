@@ -2,19 +2,56 @@
 
 Welcome to the Paka API documentation. This folder contains curl command examples for all API endpoints.
 
-## 📁 API Files
+## 🌟 Features Overview
 
+| Category | Integrations |
+|----------|--------------|
+| **Google Services** | Gmail, Calendar, Docs (unified OAuth) |
+| **Productivity** | Notion, Telegram Bot, Alarms, Reminders, Tasks |
+| **AI/RAG** | Document Q&A, Vector Search, Embeddings |
+| **Utilities** | Weather (Open-Meteo), Health Checks |
+
+---
+
+## 📁 API Documentation Files
+
+### Authentication & Users
 | File | Description |
 |------|-------------|
 | [auth.md](./auth.md) | Authentication (signup, login, profile) |
-| [gmail.md](./gmail.md) | Gmail integration (read, send, summarize) |
-| [documents.md](./documents.md) | Document upload and management |
-| [query.md](./query.md) | RAG queries (ask questions about docs) |
-| [vectors.md](./vectors.md) | Vector embeddings management |
+
+### Google Integrations
+| File | Description |
+|------|-------------|
+| [google-oauth.md](./google-oauth.md) | Unified Google OAuth setup |
+| [gmail.md](./gmail.md) | Gmail (read, send, reply, AI summary) |
+| [calendar.md](./calendar.md) | Google Calendar (events, scheduling) |
+| [google-docs.md](./google-docs.md) | Google Docs (list, read, create) |
+
+### Productivity Apps
+| File | Description |
+|------|-------------|
+| [notion.md](./notion.md) | Notion (search, read, create pages) |
+| [telegram.md](./telegram.md) | Telegram Bot (notifications) |
+| [alarms.md](./alarms.md) | Custom alarms (in-memory) |
+| [reminders.md](./reminders.md) | Database reminders |
 | [tasks.md](./tasks.md) | Task management |
-| [reminders.md](./reminders.md) | Reminder management |
+
+### AI & Documents
+| File | Description |
+|------|-------------|
+| [documents.md](./documents.md) | Document upload (PDF, DOCX, TXT) |
+| [query.md](./query.md) | RAG queries (ask questions) |
+| [vectors.md](./vectors.md) | Vector embeddings & search |
 | [sources.md](./sources.md) | External data sources |
-| [health.md](./health.md) | Health checks and monitoring |
+
+### Utilities
+| File | Description |
+|------|-------------|
+| [weather.md](./weather.md) | Weather API (Open-Meteo, no key needed) |
+| [health.md](./health.md) | Health checks & monitoring |
+
+---
 
 ## 🚀 Quick Start
 
@@ -38,28 +75,30 @@ curl -X POST http://localhost:3000/auth/login \
 export TOKEN="your-jwt-token-here"
 ```
 
-### 3. Use Any Endpoint
+### 3. Connect Google (for Gmail, Calendar, Docs)
 
 ```bash
-# Example: Get today's email summary
-curl http://localhost:3000/gmail/summary/today \
-  -H "Authorization: Bearer $TOKEN"
+# Get OAuth URL
+curl http://localhost:3000/google/auth -H "Authorization: Bearer $TOKEN"
+
+# Open the URL in browser, complete authentication
+# Check connection status
+curl http://localhost:3000/google/status -H "Authorization: Bearer $TOKEN"
 ```
+
+---
 
 ## 📧 Gmail Quick Commands
 
 ```bash
-# Connect Gmail (get OAuth URL)
-curl http://localhost:3000/gmail/auth -H "Authorization: Bearer $TOKEN"
-
-# Today's summary
+# Today's email summary (AI-powered)
 curl http://localhost:3000/gmail/summary/today -H "Authorization: Bearer $TOKEN"
 
 # List today's emails
 curl http://localhost:3000/gmail/emails/today -H "Authorization: Bearer $TOKEN"
 
-# Search emails
-curl "http://localhost:3000/gmail/emails?subject=testing" -H "Authorization: Bearer $TOKEN"
+# Search emails by subject
+curl "http://localhost:3000/gmail/emails?subject=meeting" -H "Authorization: Bearer $TOKEN"
 
 # Send email
 curl -X POST http://localhost:3000/gmail/send \
@@ -68,20 +107,144 @@ curl -X POST http://localhost:3000/gmail/send \
   -d '{"to": "someone@email.com", "subject": "Hello", "body": "Hi there!"}'
 ```
 
-## 📄 Document Quick Commands
+---
+
+## 📅 Calendar Quick Commands
 
 ```bash
-# Upload a document
+# Today's events
+curl http://localhost:3000/calendar/events/today -H "Authorization: Bearer $TOKEN"
+
+# This week's events
+curl http://localhost:3000/calendar/events/week -H "Authorization: Bearer $TOKEN"
+
+# Create event (AI - natural language)
+curl -X POST http://localhost:3000/calendar/events/quick \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Meeting with John tomorrow at 3pm at the office"}'
+
+# AI summary of today
+curl http://localhost:3000/calendar/summary/today -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+## 📝 Notion Quick Commands
+
+```bash
+# Search pages
+curl "http://localhost:3000/notion/search?query=project" -H "Authorization: Bearer $TOKEN"
+
+# Read page content
+curl http://localhost:3000/notion/pages/{pageId}/content -H "Authorization: Bearer $TOKEN"
+
+# Create page
+curl -X POST http://localhost:3000/notion/pages \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"parentId": "parent-page-id", "title": "New Page", "content": "Page content here"}'
+```
+
+---
+
+## 📄 Google Docs Quick Commands
+
+```bash
+# List documents
+curl http://localhost:3000/docs/list -H "Authorization: Bearer $TOKEN"
+
+# Read document content
+curl http://localhost:3000/docs/{docId}/content -H "Authorization: Bearer $TOKEN"
+
+# Create document
+curl -X POST http://localhost:3000/docs \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "New Document", "content": "Initial content"}'
+```
+
+---
+
+## 🤖 Telegram Quick Commands
+
+```bash
+# Check bot status
+curl http://localhost:3000/telegram/status -H "Authorization: Bearer $TOKEN"
+
+# Send message
+curl -X POST http://localhost:3000/telegram/send \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello from Paka!"}'
+
+# Send notification
+curl -X POST http://localhost:3000/telegram/notify \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Alert", "body": "Something important happened!"}'
+```
+
+---
+
+## 🌤️ Weather Quick Commands
+
+```bash
+# Current weather (no API key needed!)
+curl "http://localhost:3000/weather/current?city=Delhi" -H "Authorization: Bearer $TOKEN"
+
+# 7-day forecast
+curl "http://localhost:3000/weather/daily?city=Mumbai" -H "Authorization: Bearer $TOKEN"
+
+# Brief summary
+curl "http://localhost:3000/weather/brief?city=Bangalore" -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+## ⏰ Alarms Quick Commands
+
+```bash
+# Create alarm
+curl -X POST http://localhost:3000/alarms \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Wake up", "time": "2025-12-08T07:00:00+05:30", "repeat": "weekdays"}'
+
+# List alarms
+curl http://localhost:3000/alarms -H "Authorization: Bearer $TOKEN"
+
+# Snooze alarm
+curl -X POST http://localhost:3000/alarms/{alarmId}/snooze \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"minutes": 10}'
+```
+
+---
+
+## 📄 Document & RAG Quick Commands
+
+```bash
+# Upload a document (auto-parsed)
 curl -X POST http://localhost:3000/upload \
   -H "Authorization: Bearer $TOKEN" \
   -F "file=@document.pdf"
 
-# Ask a question
+# Ask a question about your documents
 curl -X POST http://localhost:3000/query \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"query": "What is this document about?"}'
+  -d '{"query": "What is the main topic of my documents?"}'
+
+# Search similar content
+curl -X POST http://localhost:3000/vectors/search \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "machine learning", "limit": 5}'
 ```
+
+---
 
 ## 🔧 Health Check
 
@@ -89,22 +252,38 @@ curl -X POST http://localhost:3000/query \
 # Quick check
 curl http://localhost:3000/health
 
-# Detailed check
+# Detailed check (all services)
 curl http://localhost:3000/health/detailed
 ```
+
+---
+
+## 🔑 Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `JWT_SECRET` | Yes | Secret for JWT tokens |
+| `REDIS_URL` | Yes | Redis connection string |
+| `QDRANT_URL` | Yes | Qdrant vector DB URL |
+| `GEMINI_API_KEY` | Yes | Google Gemini API key (for embeddings/LLM) |
+| `GOOGLE_CLIENT_ID` | For Google | OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | For Google | OAuth client secret |
+| `NOTION_API_KEY` | For Notion | Notion integration token |
+| `TELEGRAM_BOT_TOKEN` | For Telegram | Bot token from @BotFather |
+| `TELEGRAM_CHAT_ID` | For Telegram | Your Telegram chat ID |
 
 ---
 
 ## Base URL
 
 - **Local:** `http://localhost:3000`
-- **Production:** (configure as needed)
+- **Production:** Configure as needed
 
 ## Authentication
 
-All endpoints (except `/health` and `/auth/signup`, `/auth/login`) require a JWT token:
+All endpoints (except `/health` and `/auth/*`) require a JWT token:
 
 ```
 Authorization: Bearer YOUR_JWT_TOKEN
 ```
-
