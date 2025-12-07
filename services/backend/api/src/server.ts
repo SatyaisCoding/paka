@@ -12,6 +12,7 @@ import sourceRoutes from "./routes/sources.js";
 import taskRoutes from "./routes/tasks.js";
 import reminderRoutes from "./routes/reminders.js";
 import vectorRoutes from "./routes/vectors.js";
+import gmailRoutes from "./routes/gmail.js";
 import { initializeCollection } from "./lib/qdrant.js";
 import { initRedis } from "./lib/redis.js";
 
@@ -31,6 +32,7 @@ app.route("/reminders", reminderRoutes);
 app.route("/upload", uploadRoutes);
 app.route("/query", queryRoutes);
 app.route("/vectors", vectorRoutes);
+app.route("/gmail", gmailRoutes);
 app.route("/health", healthRoutes);
 
 const port = Number(process.env.PORT || 3000);

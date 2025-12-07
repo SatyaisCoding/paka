@@ -66,6 +66,10 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       EMBEDDING_PROVIDER: gemini
       LLM_PROVIDER: gemini
+      # Gmail OAuth credentials
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: http://localhost:3000/gmail/callback
     depends_on:
       db:
         condition: service_healthy
