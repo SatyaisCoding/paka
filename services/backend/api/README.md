@@ -11,6 +11,8 @@ A RESTful API built with **Hono**, **Prisma**, and **PostgreSQL** for document m
 - **Tasks** - Create and manage tasks with due dates
 - **Reminders** - Set and manage reminders
 - **File Upload** - Upload any file type with local storage
+- **Vector Search** - Semantic search using Qdrant + OpenAI embeddings
+- **RAG Query** - Question answering with retrieval-augmented generation
 - **Input Validation** - Zod schemas for all endpoints
 
 ## 🛠️ Tech Stack
@@ -18,7 +20,10 @@ A RESTful API built with **Hono**, **Prisma**, and **PostgreSQL** for document m
 - **Runtime**: Node.js 22+
 - **Framework**: [Hono](https://hono.dev/)
 - **Database**: PostgreSQL
+- **Vector DB**: Qdrant
 - **ORM**: Prisma
+- **Embeddings**: OpenAI text-embedding-3-small
+- **LLM**: OpenAI GPT-4o-mini
 - **Validation**: Zod
 - **Auth**: JWT (jsonwebtoken)
 - **Password Hashing**: bcryptjs
@@ -47,7 +52,19 @@ Create a `.env` file:
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/paka_db"
 JWT_SECRET="your-super-secret-jwt-key-change-in-production"
 PORT=3000
+QDRANT_URL="http://localhost:6333"
+OPENAI_API_KEY="sk-your-openai-api-key"
 ```
+
+## 🔑 OpenAI Setup
+
+1. Go to **[platform.openai.com/api-keys](https://platform.openai.com/api-keys)**
+2. Click **"Create new secret key"**
+3. Copy the key and add it to your `.env` file
+
+**Models used:**
+- `text-embedding-3-small` - For semantic search embeddings
+- `gpt-4o-mini` - For RAG question answering
 
 ## 🐳 Docker
 
@@ -142,10 +159,33 @@ docker-compose up -d
 | GET | `/upload/:id` | Get file info |
 | DELETE | `/upload/:id` | Delete file |
 
+### Vectors (`/vectors`) - Semantic Search & RAG
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/vectors/health` | Check vector services health |
+| POST | `/vectors/process-text` | Process text and generate embeddings |
+| POST | `/vectors/search` | Semantic search across documents |
+| POST | `/vectors/preview-chunks` | Preview text chunking |
+| GET | `/vectors/stats` | Get vector statistics |
+| GET | `/vectors/document/:id` | Get chunks for a document |
+| DELETE | `/vectors/document/:id` | Delete document vectors |
+| GET | `/vectors/chunk/:id` | Get specific chunk |
+
+### Query (`/query`) - RAG Question Answering
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/query` | Get query history |
+| POST | `/query` | Ask question with RAG |
+| DELETE | `/query/:id` | Delete query from history |
+| DELETE | `/query/history` | Clear query history |
+
 ### Health (`/health`)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/health` | Health check |
+| GET | `/health` | Basic health check |
+| GET | `/health/detailed` | Detailed health with all services |
+| GET | `/health/ready` | Readiness probe (k8s) |
+| GET | `/health/live` | Liveness probe (k8s) |
 
 ## 🔒 Authentication
 

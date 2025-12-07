@@ -11,6 +11,8 @@ import documentRoutes from "./routes/documents.js";
 import sourceRoutes from "./routes/sources.js";
 import taskRoutes from "./routes/tasks.js";
 import reminderRoutes from "./routes/reminders.js";
+import vectorRoutes from "./routes/vectors.js";
+import { initializeCollection } from "./lib/qdrant.js";
 
 const app = new Hono();
 
@@ -27,9 +29,23 @@ app.route("/tasks", taskRoutes);
 app.route("/reminders", reminderRoutes);
 app.route("/upload", uploadRoutes);
 app.route("/query", queryRoutes);
+app.route("/vectors", vectorRoutes);
 app.route("/health", healthRoutes);
 
 const port = Number(process.env.PORT || 3000);
-serve({ fetch: app.fetch, port });
 
-console.log(`Hono API listening @ http://localhost:${port}`);
+// Initialize services and start server
+async function start() {
+  try {
+    // Initialize Qdrant collection
+    await initializeCollection();
+    console.log("✅ Qdrant initialized");
+  } catch (err) {
+    console.warn("⚠️ Qdrant not available - vector features disabled:", (err as Error).message);
+  }
+
+  serve({ fetch: app.fetch, port });
+  console.log(`🚀 Hono API listening @ http://localhost:${port}`);
+}
+
+start();
