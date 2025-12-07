@@ -16,6 +16,10 @@ import gmailRoutes from "./routes/gmail.js";
 import googleRoutes from "./routes/google.js";
 import calendarRoutes from "./routes/calendar.js";
 import alarmRoutes from "./routes/alarms.js";
+import notionRoutes from "./routes/notion.js";
+import docsRoutes from "./routes/docs.js";
+import telegramRoutes from "./routes/telegram.js";
+import weatherRoutes from "./routes/weather.js";
 import { initializeCollection } from "./lib/qdrant.js";
 import { initRedis } from "./lib/redis.js";
 
@@ -39,6 +43,10 @@ app.route("/gmail", gmailRoutes);
 app.route("/google", googleRoutes);
 app.route("/calendar", calendarRoutes);
 app.route("/alarms", alarmRoutes);
+app.route("/notion", notionRoutes);
+app.route("/docs", docsRoutes);
+app.route("/telegram", telegramRoutes);
+app.route("/weather", weatherRoutes);
 app.route("/health", healthRoutes);
 
 const port = Number(process.env.PORT || 3000);

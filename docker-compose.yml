@@ -66,10 +66,19 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       EMBEDDING_PROVIDER: gemini
       LLM_PROVIDER: gemini
-      # Gmail OAuth credentials
+      # Google OAuth credentials
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      GOOGLE_REDIRECT_URI: http://localhost:3000/gmail/callback
+      GOOGLE_REDIRECT_URI: http://localhost:3000/google/callback
+      # Notion
+      NOTION_API_KEY: ${NOTION_API_KEY}
+      # Telegram
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+      # Weather
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
+      DEFAULT_CITY: Delhi
+      DEFAULT_COUNTRY: IN
     depends_on:
       db:
         condition: service_healthy
