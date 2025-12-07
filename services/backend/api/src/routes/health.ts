@@ -2,8 +2,10 @@
 import { Hono } from 'hono';
 import prisma from '../lib/prisma.js';
 import { checkQdrantHealth } from '../lib/qdrant.js';
+import { checkRedisHealth } from '../lib/redis.js';
 import { getProviderInfo, isEmbeddingConfigured } from '../services/embedding.service.js';
 import { getLLMProviderInfo, isLLMConfigured } from '../services/llm.service.js';
+import { getCacheInfo } from '../services/cache.service.js';
 
 const health = new Hono();
 
@@ -36,6 +38,34 @@ health.get('/detailed', async (c) => {
     allHealthy = false;
   }
 
+  // Check Redis
+  const redisStart = Date.now();
+  try {
+    const healthy = await checkRedisHealth();
+    if (healthy) {
+      const cacheInfo = await getCacheInfo();
+      checks.redis = {
+        status: 'healthy',
+        latencyMs: Date.now() - redisStart,
+        details: {
+          keys: cacheInfo.keys,
+          memory: cacheInfo.memory,
+        },
+      };
+    } else {
+      checks.redis = {
+        status: 'unhealthy',
+        latencyMs: Date.now() - redisStart,
+      };
+    }
+  } catch (err: any) {
+    checks.redis = {
+      status: 'unhealthy',
+      error: err.message,
+    };
+    // Redis is optional, don't mark as unhealthy
+  }
+
   // Check Qdrant
   const qdrantStart = Date.now();
   try {
@@ -53,7 +83,7 @@ health.get('/detailed', async (c) => {
     allHealthy = false;
   }
 
-  // Check Embedding Service (OpenAI)
+  // Check Embedding Service
   const embeddingInfo = getProviderInfo();
   const embeddingConfigured = isEmbeddingConfigured();
   checks.embeddings = {
@@ -65,11 +95,11 @@ health.get('/detailed', async (c) => {
     },
   };
   if (!embeddingConfigured) {
-    checks.embeddings.error = 'OPENAI_API_KEY not set';
+    checks.embeddings.error = 'API key not set';
     allHealthy = false;
   }
 
-  // Check LLM Service (OpenAI)
+  // Check LLM Service
   const llmInfo = getLLMProviderInfo();
   const llmConfigured = isLLMConfigured();
   checks.llm = {
@@ -80,7 +110,7 @@ health.get('/detailed', async (c) => {
     },
   };
   if (!llmConfigured) {
-    checks.llm.error = 'OPENAI_API_KEY not set';
+    checks.llm.error = 'API key not set';
     allHealthy = false;
   }
 

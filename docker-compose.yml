@@ -17,13 +17,28 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: paka_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   qdrant:
     image: qdrant/qdrant:latest
     container_name: paka_qdrant
     restart: unless-stopped
     ports:
-      - "6333:6333"  # REST API
-      - "6334:6334"  # gRPC
+      - "6333:6333"
+      - "6334:6334"
     volumes:
       - qdrant_data:/qdrant/storage
     environment:
@@ -47,12 +62,14 @@ services:
       JWT_SECRET: your-super-secret-jwt-key-change-in-production
       PORT: 3000
       QDRANT_URL: http://qdrant:6333
-      # OpenAI API Key
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      EMBEDDING_PROVIDER: openai
-      LLM_PROVIDER: openai
+      REDIS_URL: redis://redis:6379
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      EMBEDDING_PROVIDER: gemini
+      LLM_PROVIDER: gemini
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       qdrant:
         condition: service_healthy
@@ -60,3 +77,4 @@ services:
 volumes:
   postgres_data:
   qdrant_data:
+  redis_data:

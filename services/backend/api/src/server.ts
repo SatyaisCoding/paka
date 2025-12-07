@@ -13,6 +13,7 @@ import taskRoutes from "./routes/tasks.js";
 import reminderRoutes from "./routes/reminders.js";
 import vectorRoutes from "./routes/vectors.js";
 import { initializeCollection } from "./lib/qdrant.js";
+import { initRedis } from "./lib/redis.js";
 
 const app = new Hono();
 
@@ -36,8 +37,15 @@ const port = Number(process.env.PORT || 3000);
 
 // Initialize services and start server
 async function start() {
+  // Initialize Redis
   try {
-    // Initialize Qdrant collection
+    await initRedis();
+  } catch (err) {
+    console.warn("⚠️ Redis not available - caching disabled:", (err as Error).message);
+  }
+
+  // Initialize Qdrant
+  try {
     await initializeCollection();
     console.log("✅ Qdrant initialized");
   } catch (err) {

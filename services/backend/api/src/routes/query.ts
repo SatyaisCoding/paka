@@ -3,14 +3,24 @@ import { Hono } from 'hono';
 import prisma from '../lib/prisma.js';
 import { authMiddleware, getUserId } from '../middleware/auth.js';
 import { validateBody, getValidatedBody } from '../middleware/validate.js';
+import { queryRateLimiter } from '../middleware/rateLimit.js';
 import { z } from 'zod';
 import { semanticSearch } from '../services/vector.service.js';
 import { generateRAGAnswer, isLLMConfigured, getLLMProviderInfo } from '../services/llm.service.js';
+import { 
+  cacheQueryResult, 
+  getCachedQueryResult, 
+  hashText,
+  invalidateUserQueryCache 
+} from '../services/cache.service.js';
 
 const query = new Hono();
 
 // Apply auth middleware
 query.use('*', authMiddleware);
+
+// Apply rate limiting to POST queries
+query.post('*', queryRateLimiter);
 
 // Schemas
 const querySchema = z.object({
@@ -19,6 +29,7 @@ const querySchema = z.object({
   documentIds: z.array(z.number().int().positive()).optional(),
   includeContext: z.boolean().optional(),
   generateAnswer: z.boolean().optional(),
+  useCache: z.boolean().optional(), // Allow disabling cache
 });
 
 // GET /query - Get query history
@@ -67,7 +78,7 @@ query.get('/info', async (c) => {
   });
 });
 
-// POST /query - Ask a question with RAG
+// POST /query - Ask a question with RAG (with caching)
 query.post('/', validateBody(querySchema), async (c) => {
   const startTime = Date.now();
 
@@ -79,13 +90,36 @@ query.post('/', validateBody(querySchema), async (c) => {
       documentIds,
       includeContext = true,
       generateAnswer = true,
+      useCache = true,
     } = getValidatedBody<{
       query: string;
       limit?: number;
       documentIds?: number[];
       includeContext?: boolean;
       generateAnswer?: boolean;
+      useCache?: boolean;
     }>(c);
+
+    // Generate cache key from query params
+    const cacheKey = hashText(JSON.stringify({
+      query: userQuery,
+      limit,
+      documentIds: documentIds?.sort(),
+      includeContext,
+      generateAnswer,
+    }));
+
+    // Check cache first
+    if (useCache) {
+      const cachedResult = await getCachedQueryResult(userId, cacheKey);
+      if (cachedResult) {
+        return c.json({
+          ...cachedResult,
+          cached: true,
+          latencyMs: Date.now() - startTime,
+        });
+      }
+    }
 
     // Verify document ownership if specified
     if (documentIds && documentIds.length > 0) {
@@ -113,7 +147,6 @@ query.post('/', validateBody(querySchema), async (c) => {
 
     // Include context if requested
     if (includeContext) {
-      // Get document details
       const docIds = [...new Set(searchResults.map(r => r.documentId))];
       const documents = await prisma.document.findMany({
         where: { id: { in: docIds } },
@@ -140,20 +173,27 @@ query.post('/', validateBody(querySchema), async (c) => {
             provider: ragResponse.provider,
             model: ragResponse.model,
           };
-          if (ragResponse.usage) {
-            response.tokenUsage = ragResponse.usage;
-          }
         } catch (err: any) {
           response.answerError = 'Failed to generate answer: ' + err.message;
         }
       } else {
-        response.answerError = 'OpenAI API key not configured';
+        response.answerError = 'LLM not configured';
       }
     } else if (generateAnswer && searchResults.length === 0) {
       response.answer = 'No relevant context found in your documents to answer this question.';
     }
 
     const latencyMs = Date.now() - startTime;
+    response.latencyMs = latencyMs;
+    response.cached = false;
+
+    // Cache the result (without latency)
+    if (useCache && response.ok) {
+      const cacheData = { ...response };
+      delete cacheData.latencyMs;
+      delete cacheData.cached;
+      await cacheQueryResult(userId, cacheKey, cacheData);
+    }
 
     // Log query
     await prisma.queryLog.create({
@@ -166,11 +206,26 @@ query.post('/', validateBody(querySchema), async (c) => {
       },
     });
 
-    response.latencyMs = latencyMs;
-
     return c.json(response);
   } catch (err: any) {
     console.error('Query error:', err);
+    return c.json({ ok: false, error: err.message }, 500);
+  }
+});
+
+// POST /query/clear-cache - Clear user's query cache
+query.post('/clear-cache', async (c) => {
+  try {
+    const userId = getUserId(c);
+    const deleted = await invalidateUserQueryCache(userId);
+    
+    return c.json({
+      ok: true,
+      message: `Cache cleared`,
+      keysDeleted: deleted,
+    });
+  } catch (err: any) {
+    console.error('Clear cache error:', err);
     return c.json({ ok: false, error: err.message }, 500);
   }
 });
@@ -212,6 +267,9 @@ query.delete('/history', async (c) => {
     const result = await prisma.queryLog.deleteMany({
       where: { userId },
     });
+
+    // Also clear cache
+    await invalidateUserQueryCache(userId);
 
     return c.json({
       ok: true,
