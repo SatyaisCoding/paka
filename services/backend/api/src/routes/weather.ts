@@ -20,10 +20,16 @@ const weather = new Hono();
 weather.get('/status', authMiddleware, (c) => {
   return c.json({
     ok: true,
-    configured: isWeatherConfigured(),
-    message: isWeatherConfigured()
-      ? 'Weather API is configured'
-      : 'Weather API not configured. Set OPENWEATHER_API_KEY in environment. Get free key at openweathermap.org',
+    configured: true,
+    provider: 'Open-Meteo',
+    message: 'Weather API ready! Using Open-Meteo (ECMWF data) - free, no API key required.',
+    features: [
+      'Current weather',
+      '7-day forecast',
+      'Hourly forecast (48 hours)',
+      'UV Index',
+      'Precipitation probability',
+    ],
   });
 });
 
