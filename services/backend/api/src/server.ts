@@ -13,6 +13,9 @@ import taskRoutes from "./routes/tasks.js";
 import reminderRoutes from "./routes/reminders.js";
 import vectorRoutes from "./routes/vectors.js";
 import gmailRoutes from "./routes/gmail.js";
+import googleRoutes from "./routes/google.js";
+import calendarRoutes from "./routes/calendar.js";
+import alarmRoutes from "./routes/alarms.js";
 import { initializeCollection } from "./lib/qdrant.js";
 import { initRedis } from "./lib/redis.js";
 
@@ -33,6 +36,9 @@ app.route("/upload", uploadRoutes);
 app.route("/query", queryRoutes);
 app.route("/vectors", vectorRoutes);
 app.route("/gmail", gmailRoutes);
+app.route("/google", googleRoutes);
+app.route("/calendar", calendarRoutes);
+app.route("/alarms", alarmRoutes);
 app.route("/health", healthRoutes);
 
 const port = Number(process.env.PORT || 3000);

@@ -1,92 +1,26 @@
 // src/services/gmail.service.ts
 import { google, gmail_v1 } from 'googleapis';
+import { 
+  getAuthenticatedClient, 
+  isGoogleAuthenticated,
+  getGoogleAuthUrl,
+  exchangeGoogleCode,
+  disconnectGoogle
+} from './google-auth.service.js';
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/gmail/callback';
-
-// Scopes for Gmail API
-const SCOPES = [
-  'https://www.googleapis.com/auth/gmail.readonly',
-  'https://www.googleapis.com/auth/gmail.send',
-  'https://www.googleapis.com/auth/gmail.modify',
-];
-
-// Store tokens in memory (for single user, single account)
-let storedTokens: {
-  access_token: string;
-  refresh_token: string;
-  expiry_date: number;
-} | null = null;
-
-/**
- * Create OAuth2 client
- */
-export function createOAuth2Client() {
-  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
-    throw new Error('Google OAuth credentials not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET');
-  }
-  
-  return new google.auth.OAuth2(
-    GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET,
-    GOOGLE_REDIRECT_URI
-  );
-}
-
-/**
- * Get authorization URL for OAuth flow
- */
-export function getAuthUrl(): string {
-  const oauth2Client = createOAuth2Client();
-  
-  return oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: SCOPES,
-    prompt: 'consent',
-  });
-}
-
-/**
- * Exchange authorization code for tokens
- */
-export async function exchangeCodeForTokens(code: string): Promise<void> {
-  const oauth2Client = createOAuth2Client();
-  const { tokens } = await oauth2Client.getToken(code);
-  
-  storedTokens = {
-    access_token: tokens.access_token!,
-    refresh_token: tokens.refresh_token!,
-    expiry_date: tokens.expiry_date!,
-  };
-}
-
-/**
- * Check if authenticated
- */
-export function isAuthenticated(): boolean {
-  return storedTokens !== null;
-}
+// Re-export auth functions for backwards compatibility
+export const getAuthUrl = getGoogleAuthUrl;
+export const exchangeCodeForTokens = exchangeGoogleCode;
+export const isAuthenticated = isGoogleAuthenticated;
+export const disconnect = disconnectGoogle;
 
 /**
  * Get authenticated Gmail client
  */
 export function getGmailClient(): gmail_v1.Gmail {
-  if (!storedTokens) {
-    throw new Error('Not authenticated. Please connect Gmail first.');
-  }
-  
-  const oauth2Client = createOAuth2Client();
-  oauth2Client.setCredentials(storedTokens);
+  const oauth2Client = getAuthenticatedClient();
   
   return google.gmail({ version: 'v1', auth: oauth2Client });
-}
-
-/**
- * Disconnect Gmail (clear tokens)
- */
-export function disconnect(): void {
-  storedTokens = null;
 }
 
 // ============ EMAIL INTERFACES ============
