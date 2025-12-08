@@ -17,8 +17,8 @@ export const disconnect = disconnectGoogle;
 /**
  * Get authenticated Gmail client
  */
-export function getGmailClient(): gmail_v1.Gmail {
-  const oauth2Client = getAuthenticatedClient();
+export async function getGmailClient(): Promise<gmail_v1.Gmail> {
+  const oauth2Client = await getAuthenticatedClient();
   
   return google.gmail({ version: 'v1', auth: oauth2Client });
 }
@@ -151,7 +151,7 @@ function parseMessage(message: gmail_v1.Schema$Message): Email {
  * List emails with optional filter
  */
 export async function listEmails(filter: EmailFilter = {}): Promise<Email[]> {
-  const gmail = getGmailClient();
+  const gmail = await getGmailClient();
   const query = buildQuery(filter);
   const maxResults = filter.maxResults || 20;
   
@@ -184,7 +184,11 @@ export async function listEmails(filter: EmailFilter = {}): Promise<Email[]> {
  */
 export async function getTodayEmails(maxResults: number = 50): Promise<Email[]> {
   const today = new Date();
-  const dateStr = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
+  // Gmail API expects YYYY/MM/DD format
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const dateStr = `${year}/${month}/${day}`;
   
   return listEmails({
     after: dateStr,
@@ -206,7 +210,7 @@ export async function getUnreadEmails(maxResults: number = 20): Promise<Email[]>
  * Get single email by ID
  */
 export async function getEmail(emailId: string): Promise<Email> {
-  const gmail = getGmailClient();
+  const gmail = await getGmailClient();
   
   const response = await gmail.users.messages.get({
     userId: 'me',
@@ -221,7 +225,7 @@ export async function getEmail(emailId: string): Promise<Email> {
  * Mark email as read
  */
 export async function markAsRead(emailId: string): Promise<void> {
-  const gmail = getGmailClient();
+  const gmail = await getGmailClient();
   
   await gmail.users.messages.modify({
     userId: 'me',
@@ -236,7 +240,7 @@ export async function markAsRead(emailId: string): Promise<void> {
  * Mark email as unread
  */
 export async function markAsUnread(emailId: string): Promise<void> {
-  const gmail = getGmailClient();
+  const gmail = await getGmailClient();
   
   await gmail.users.messages.modify({
     userId: 'me',
@@ -270,7 +274,7 @@ export async function sendEmail(
   subject: string,
   body: string
 ): Promise<{ id: string; threadId: string }> {
-  const gmail = getGmailClient();
+  const gmail = await getGmailClient();
   
   const response = await gmail.users.messages.send({
     userId: 'me',
@@ -292,7 +296,7 @@ export async function replyToEmail(
   emailId: string,
   body: string
 ): Promise<{ id: string; threadId: string }> {
-  const gmail = getGmailClient();
+  const gmail = await getGmailClient();
   
   // Get original email
   const original = await getEmail(emailId);
@@ -323,7 +327,7 @@ export async function replyToEmail(
  * Delete email (move to trash)
  */
 export async function deleteEmail(emailId: string): Promise<void> {
-  const gmail = getGmailClient();
+  const gmail = await getGmailClient();
   
   await gmail.users.messages.trash({
     userId: 'me',
@@ -335,7 +339,7 @@ export async function deleteEmail(emailId: string): Promise<void> {
  * Get email labels/folders
  */
 export async function getLabels(): Promise<{ id: string; name: string }[]> {
-  const gmail = getGmailClient();
+  const gmail = await getGmailClient();
   
   const response = await gmail.users.labels.list({
     userId: 'me',
@@ -351,7 +355,7 @@ export async function getLabels(): Promise<{ id: string; name: string }[]> {
  * Get user profile
  */
 export async function getProfile(): Promise<{ email: string; messagesTotal: number; threadsTotal: number }> {
-  const gmail = getGmailClient();
+  const gmail = await getGmailClient();
   
   const response = await gmail.users.getProfile({
     userId: 'me',

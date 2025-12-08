@@ -5,8 +5,8 @@ import { getAuthenticatedClient, isGoogleAuthenticated } from './google-auth.ser
 /**
  * Get Google Calendar client
  */
-export function getCalendarClient(): calendar_v3.Calendar {
-  const oauth2Client = getAuthenticatedClient();
+export async function getCalendarClient(): Promise<calendar_v3.Calendar> {
+  const oauth2Client = await getAuthenticatedClient();
   return google.calendar({ version: 'v3', auth: oauth2Client });
 }
 
@@ -122,7 +122,7 @@ function getWeekRange(): { start: string; end: string } {
  * List user's calendars
  */
 export async function listCalendars(): Promise<{ id: string; name: string; primary: boolean }[]> {
-  const calendar = getCalendarClient();
+  const calendar = await getCalendarClient();
   
   const { data } = await calendar.calendarList.list();
   
@@ -137,7 +137,7 @@ export async function listCalendars(): Promise<{ id: string; name: string; prima
  * List events with optional filters
  */
 export async function listEvents(filter: EventFilter = {}): Promise<CalendarEvent[]> {
-  const calendar = getCalendarClient();
+  const calendar = await getCalendarClient();
   
   const { data } = await calendar.events.list({
     calendarId: filter.calendarId || 'primary',
@@ -187,7 +187,7 @@ export async function getUpcomingEvents(days: number = 7, maxResults: number = 2
  * Get single event by ID
  */
 export async function getEvent(eventId: string, calendarId: string = 'primary'): Promise<CalendarEvent> {
-  const calendar = getCalendarClient();
+  const calendar = await getCalendarClient();
   
   const { data } = await calendar.events.get({
     calendarId,
@@ -201,7 +201,7 @@ export async function getEvent(eventId: string, calendarId: string = 'primary'):
  * Create a new event
  */
 export async function createEvent(input: CreateEventInput, calendarId: string = 'primary'): Promise<CalendarEvent> {
-  const calendar = getCalendarClient();
+  const calendar = await getCalendarClient();
   
   const eventBody: calendar_v3.Schema$Event = {
     summary: input.title,
@@ -244,7 +244,7 @@ export async function updateEvent(
   updates: Partial<CreateEventInput>,
   calendarId: string = 'primary'
 ): Promise<CalendarEvent> {
-  const calendar = getCalendarClient();
+  const calendar = await getCalendarClient();
   
   // Get existing event
   const { data: existing } = await calendar.events.get({
@@ -290,7 +290,7 @@ export async function updateEvent(
  * Delete an event
  */
 export async function deleteEvent(eventId: string, calendarId: string = 'primary'): Promise<void> {
-  const calendar = getCalendarClient();
+  const calendar = await getCalendarClient();
   
   await calendar.events.delete({
     calendarId,
@@ -303,7 +303,7 @@ export async function deleteEvent(eventId: string, calendarId: string = 'primary
  * Quick add event using natural language
  */
 export async function quickAddEvent(text: string, calendarId: string = 'primary'): Promise<CalendarEvent> {
-  const calendar = getCalendarClient();
+  const calendar = await getCalendarClient();
   
   const { data } = await calendar.events.quickAdd({
     calendarId,
@@ -321,7 +321,7 @@ export async function getFreeBusy(
   timeMax: string,
   calendars: string[] = ['primary']
 ): Promise<{ calendar: string; busy: { start: string; end: string }[] }[]> {
-  const calendarClient = getCalendarClient();
+  const calendarClient = await getCalendarClient();
   
   const { data } = await calendarClient.freebusy.query({
     requestBody: {

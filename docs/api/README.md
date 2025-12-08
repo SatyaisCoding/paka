@@ -9,7 +9,8 @@ Welcome to the Paka API documentation. This folder contains curl command example
 | **Google Services** | Gmail, Calendar, Docs (unified OAuth) |
 | **Productivity** | Notion, Telegram Bot, Alarms, Reminders, Tasks |
 | **AI/RAG** | Document Q&A, Vector Search, Embeddings |
-| **Utilities** | Weather (Open-Meteo), Health Checks |
+| **Real-time** | Socket.IO (WebSocket), Kafka (async events) |
+| **Utilities** | Weather (Open-Meteo), Daily Briefing, Weekly Report |
 
 ---
 
@@ -45,9 +46,17 @@ Welcome to the Paka API documentation. This folder contains curl command example
 | [vectors.md](./vectors.md) | Vector embeddings & search |
 | [sources.md](./sources.md) | External data sources |
 
+### Real-time & Async
+| File | Description |
+|------|-------------|
+| [socket-io.md](./socket-io.md) | **Socket.IO** (WebSocket real-time updates) |
+| [kafka.md](./kafka.md) | **Kafka** (async event processing) |
+
 ### Utilities
 | File | Description |
 |------|-------------|
+| [briefing.md](./briefing.md) | **Daily Briefing** (one call for everything!) |
+| [report.md](./report.md) | **Weekly Report** (AI summary of your week) |
 | [weather.md](./weather.md) | Weather API (Open-Meteo, no key needed) |
 | [health.md](./health.md) | Health checks & monitoring |
 
@@ -187,6 +196,21 @@ curl -X POST http://localhost:3000/telegram/notify \
 
 ---
 
+## 🌅 Daily Briefing (One Call for Everything!)
+
+```bash
+# Full briefing with AI summary
+curl http://localhost:3000/briefing -H "Authorization: Bearer $TOKEN"
+
+# Quick briefing (minimal data)
+curl http://localhost:3000/briefing/quick -H "Authorization: Bearer $TOKEN"
+
+# Send to Telegram
+curl -X POST http://localhost:3000/briefing/telegram -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
 ## 🌤️ Weather Quick Commands
 
 ```bash
@@ -242,6 +266,56 @@ curl -X POST http://localhost:3000/vectors/search \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query": "machine learning", "limit": 5}'
+```
+
+---
+
+## 🔌 Socket.IO (Real-time)
+
+```bash
+# Check Socket.IO status
+curl http://localhost:3000/socket/status
+
+# Test notification (to yourself)
+curl -X POST http://localhost:3000/socket/test/notification \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Test", "message": "Hello from Socket.IO!"}'
+
+# Connection info
+curl http://localhost:3000/socket/connections -H "Authorization: Bearer $TOKEN"
+```
+
+**Connect via WebSocket:**
+```javascript
+const socket = io('http://localhost:3000', {
+  auth: { token: 'your-jwt-token' }
+});
+
+socket.on('notification', (data) => {
+  console.log('New notification:', data);
+});
+```
+
+---
+
+## 📊 Kafka Quick Commands
+
+```bash
+# Check Kafka status
+curl http://localhost:3000/kafka/status -H "Authorization: Bearer $TOKEN"
+
+# Test async notification via Kafka
+curl -X POST http://localhost:3000/kafka/notification \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"type": "telegram", "title": "Test", "body": "Hello via Kafka!"}'
+
+# Request async report generation
+curl -X POST http://localhost:3000/kafka/report \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"reportType": "weekly"}'
 ```
 
 ---

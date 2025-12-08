@@ -25,11 +25,13 @@
     "googleapis": "^144.0.0",
     "hono": "^4.10.7",
     "jsonwebtoken": "^9.0.2",
+    "kafkajs": "^2.2.4",
     "mammoth": "^1.8.0",
     "openai": "^4.77.0",
     "pdf-parse": "^1.1.1",
     "pg": "^8.16.3",
     "redis": "^4.7.0",
+    "socket.io": "^4.8.1",
     "zod": "^4.1.13"
   },
   "devDependencies": {

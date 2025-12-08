@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { cors } from "hono/cors";
+import { createServer } from "http";
 import routes from "./routes/index.js";
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/users.js";
@@ -20,8 +21,16 @@ import notionRoutes from "./routes/notion.js";
 import docsRoutes from "./routes/docs.js";
 import telegramRoutes from "./routes/telegram.js";
 import weatherRoutes from "./routes/weather.js";
+import briefingRoutes from "./routes/briefing.js";
+import reportRoutes from "./routes/report.js";
+import kafkaRoutes from "./routes/kafka.js";
+import socketRoutes from "./routes/socket.js";
 import { initializeCollection } from "./lib/qdrant.js";
 import { initRedis } from "./lib/redis.js";
+import { initGoogleAuth } from "./services/google-auth.service.js";
+import { initKafkaProducer, isKafkaConnected } from "./lib/kafka.js";
+import { startKafkaConsumers } from "./workers/kafka-consumers.js";
+import { initSocketIO } from "./lib/socket.js";
 
 const app = new Hono();
 
@@ -47,6 +56,10 @@ app.route("/notion", notionRoutes);
 app.route("/docs", docsRoutes);
 app.route("/telegram", telegramRoutes);
 app.route("/weather", weatherRoutes);
+app.route("/briefing", briefingRoutes);
+app.route("/report", reportRoutes);
+app.route("/kafka", kafkaRoutes);
+app.route("/socket", socketRoutes);
 app.route("/health", healthRoutes);
 
 const port = Number(process.env.PORT || 3000);
@@ -68,8 +81,39 @@ async function start() {
     console.warn("⚠️ Qdrant not available - vector features disabled:", (err as Error).message);
   }
 
-  serve({ fetch: app.fetch, port });
+  // Initialize Google Auth (load tokens from DB)
+  try {
+    await initGoogleAuth();
+  } catch (err) {
+    console.warn("⚠️ Google auth init failed:", (err as Error).message);
+  }
+
+  // Initialize Kafka
+  try {
+    await initKafkaProducer();
+    if (isKafkaConnected()) {
+      await startKafkaConsumers();
+    }
+  } catch (err) {
+    console.warn("⚠️ Kafka not available - async processing disabled:", (err as Error).message);
+  }
+
+  // Create HTTP server with Hono
+  const server = serve({
+    fetch: app.fetch,
+    port,
+  });
+
+  // Initialize Socket.IO on the same server
+  try {
+    // @ts-ignore - server is compatible with http.Server
+    initSocketIO(server);
+  } catch (err) {
+    console.warn("⚠️ Socket.IO init failed:", (err as Error).message);
+  }
+
   console.log(`🚀 Hono API listening @ http://localhost:${port}`);
+  console.log(`🔌 Socket.IO ready @ ws://localhost:${port}`);
 }
 
 start();

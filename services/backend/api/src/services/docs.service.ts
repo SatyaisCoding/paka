@@ -7,16 +7,16 @@ import { getAuthenticatedClient, isGoogleAuthenticated } from './google-auth.ser
 /**
  * Get Google Docs client
  */
-export function getDocsClient(): docs_v1.Docs {
-  const oauth2Client = getAuthenticatedClient();
+export async function getDocsClient(): Promise<docs_v1.Docs> {
+  const oauth2Client = await getAuthenticatedClient();
   return google.docs({ version: 'v1', auth: oauth2Client });
 }
 
 /**
  * Get Google Drive client (for listing docs)
  */
-function getDriveClient() {
-  const oauth2Client = getAuthenticatedClient();
+async function getDriveClient() {
+  const oauth2Client = await getAuthenticatedClient();
   return google.drive({ version: 'v3', auth: oauth2Client });
 }
 
@@ -65,7 +65,7 @@ function extractContent(document: docs_v1.Schema$Document): string {
  * List Google Docs
  */
 export async function listDocs(maxResults: number = 20): Promise<GoogleDoc[]> {
-  const drive = getDriveClient();
+  const drive = await getDriveClient();
   
   const response = await drive.files.list({
     q: "mimeType='application/vnd.google-apps.document'",
@@ -87,7 +87,7 @@ export async function listDocs(maxResults: number = 20): Promise<GoogleDoc[]> {
  * Search Google Docs
  */
 export async function searchDocs(query: string, maxResults: number = 20): Promise<GoogleDoc[]> {
-  const drive = getDriveClient();
+  const drive = await getDriveClient();
   
   const response = await drive.files.list({
     q: `mimeType='application/vnd.google-apps.document' and fullText contains '${query}'`,
@@ -109,7 +109,7 @@ export async function searchDocs(query: string, maxResults: number = 20): Promis
  * Get a document by ID
  */
 export async function getDoc(documentId: string): Promise<GoogleDoc> {
-  const docs = getDocsClient();
+  const docs = await getDocsClient();
   
   const response = await docs.documents.get({
     documentId,
@@ -137,7 +137,7 @@ export async function getDocContent(documentId: string): Promise<string> {
  * Create a new document
  */
 export async function createDoc(input: CreateDocInput): Promise<GoogleDoc> {
-  const docs = getDocsClient();
+  const docs = await getDocsClient();
   
   // Create empty document
   const createResponse = await docs.documents.create({
@@ -177,7 +177,7 @@ export async function createDoc(input: CreateDocInput): Promise<GoogleDoc> {
  * Append text to a document
  */
 export async function appendToDoc(documentId: string, text: string): Promise<void> {
-  const docs = getDocsClient();
+  const docs = await getDocsClient();
   
   // Get current document to find end index
   const doc = await docs.documents.get({ documentId });
@@ -206,7 +206,7 @@ export async function replaceInDoc(
   findText: string,
   replaceText: string
 ): Promise<number> {
-  const docs = getDocsClient();
+  const docs = await getDocsClient();
   
   const response = await docs.documents.batchUpdate({
     documentId,
@@ -233,7 +233,7 @@ export async function replaceInDoc(
  * Delete a document (move to trash)
  */
 export async function deleteDoc(documentId: string): Promise<void> {
-  const drive = getDriveClient();
+  const drive = await getDriveClient();
   
   await drive.files.update({
     fileId: documentId,
@@ -254,7 +254,7 @@ export async function getDocMetadata(documentId: string): Promise<{
   modifiedTime?: string;
   size?: string;
 }> {
-  const drive = getDriveClient();
+  const drive = await getDriveClient();
   
   const response = await drive.files.get({
     fileId: documentId,

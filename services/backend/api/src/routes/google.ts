@@ -1,14 +1,16 @@
 // src/routes/google.ts
 // Unified Google OAuth routes for all Google services
+// Now with PERSISTENT token storage!
 
 import { Hono } from 'hono';
-import { authMiddleware } from '../middleware/auth.js';
+import { authMiddleware, getUserId } from '../middleware/auth.js';
 import {
   getGoogleAuthUrl,
   exchangeGoogleCode,
   isGoogleAuthenticated,
   disconnectGoogle,
   getGoogleProfile,
+  loadTokensFromDB,
 } from '../services/google-auth.service.js';
 
 const google = new Hono();
@@ -16,12 +18,15 @@ const google = new Hono();
 // GET /google/auth - Get OAuth URL to connect Google account
 google.get('/auth', authMiddleware, (c) => {
   try {
-    const authUrl = getGoogleAuthUrl();
+    const userId = getUserId(c);
+    const authUrl = getGoogleAuthUrl(userId);
+    
     return c.json({
       ok: true,
       authUrl,
       message: 'Open this URL to connect your Google account (Gmail, Calendar, Docs, etc.)',
       scopes: ['gmail', 'calendar', 'docs', 'drive', 'fitness'],
+      note: 'Tokens will be saved permanently - no need to reconnect after server restart!',
     });
   } catch (err: any) {
     return c.json({ ok: false, error: err.message }, 500);
@@ -32,20 +37,23 @@ google.get('/auth', authMiddleware, (c) => {
 google.get('/callback', async (c) => {
   try {
     const code = c.req.query('code');
+    const state = c.req.query('state');
     
     if (!code) {
       return c.json({ ok: false, error: 'No authorization code provided' }, 400);
     }
     
-    await exchangeGoogleCode(code);
+    const { userId } = await exchangeGoogleCode(code, state || undefined);
     const profile = await getGoogleProfile();
     
     return c.json({
       ok: true,
-      message: 'Google account connected successfully!',
+      message: 'Google account connected successfully! Tokens saved to database.',
+      userId,
       email: profile.email,
       name: profile.name,
       services: ['Gmail', 'Calendar', 'Docs', 'Drive', 'Fit'],
+      persistent: true,
     });
   } catch (err: any) {
     return c.json({ ok: false, error: err.message }, 500);
@@ -55,6 +63,13 @@ google.get('/callback', async (c) => {
 // GET /google/status - Check connection status
 google.get('/status', authMiddleware, async (c) => {
   try {
+    const userId = getUserId(c);
+    
+    // Try to load from DB if not in memory
+    if (!isGoogleAuthenticated()) {
+      await loadTokensFromDB(userId);
+    }
+    
     if (!isGoogleAuthenticated()) {
       return c.json({
         ok: true,
@@ -72,6 +87,7 @@ google.get('/status', authMiddleware, async (c) => {
       name: profile.name,
       picture: profile.picture,
       services: ['Gmail', 'Calendar', 'Docs', 'Drive', 'Fit'],
+      persistent: true,
     });
   } catch (err: any) {
     return c.json({
@@ -83,13 +99,14 @@ google.get('/status', authMiddleware, async (c) => {
 });
 
 // POST /google/disconnect - Disconnect Google account
-google.post('/disconnect', authMiddleware, (c) => {
-  disconnectGoogle();
+google.post('/disconnect', authMiddleware, async (c) => {
+  const userId = getUserId(c);
+  await disconnectGoogle(userId);
+  
   return c.json({
     ok: true,
-    message: 'Google account disconnected',
+    message: 'Google account disconnected and tokens removed from database',
   });
 });
 
 export default google;
-
