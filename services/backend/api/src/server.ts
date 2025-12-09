@@ -25,7 +25,7 @@ import briefingRoutes from "./routes/briefing.js";
 import reportRoutes from "./routes/report.js";
 import kafkaRoutes from "./routes/kafka.js";
 import socketRoutes from "./routes/socket.js";
-import { initializeCollection } from "./lib/qdrant.js";
+import { initializeCollection, initializeQdrantGrpc } from "./lib/qdrant.js";
 import { initRedis } from "./lib/redis.js";
 import { initGoogleAuth } from "./services/google-auth.service.js";
 import { initKafkaProducer, isKafkaConnected } from "./lib/kafka.js";
@@ -73,10 +73,19 @@ async function start() {
     console.warn("⚠️ Redis not available - caching disabled:", (err as Error).message);
   }
 
-  // Initialize Qdrant
+  // Initialize Qdrant (try gRPC first, fallback to REST)
   try {
+    // Try to initialize gRPC client
+    const grpcAvailable = await initializeQdrantGrpc();
+    
+    // Initialize collection (works with both gRPC and REST)
     await initializeCollection();
-    console.log("✅ Qdrant initialized");
+    
+    if (grpcAvailable) {
+      console.log("✅ Qdrant initialized with gRPC (high performance)");
+    } else {
+      console.log("✅ Qdrant initialized with REST (fallback)");
+    }
   } catch (err) {
     console.warn("⚠️ Qdrant not available - vector features disabled:", (err as Error).message);
   }
