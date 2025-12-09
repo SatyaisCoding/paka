@@ -38,3 +38,10 @@ uploads/
 
 # Test files
 test-*.html
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Backup files
+*.bak
+*.backup
